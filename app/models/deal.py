@@ -28,11 +28,12 @@ class Deal:
     def insert_deals(deals):    
         deals_data = []
         for deal_id, deal_info in deals.items():
+            start_time = deal_info['start_time']
             if type(start_time) is str:
                 start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
             deals_data.append({
                 '_id': deal_id,
-                'start_time': deal_info['start_time'],
+                'start_time': start_time,
                 'promo_codes': list(deal_info['promo_codes']),
                 'price': deal_info['price'],
                 'created_at': datetime.now(timezone.utc)
@@ -50,3 +51,11 @@ class Deal:
     @staticmethod
     def destroy(sku):
         return deals_collection.delete_one({'_id': sku})
+    
+    # get all the deals starting on a specific day.
+    # example: Deal.starting_on('2024-01-01')
+    @staticmethod
+    def starting_on(date):
+        start_date = datetime.fromisoformat(date)
+        end_date = start_date.replace(hour=23, minute=59, second=59)
+        return deals_collection.find({'start_time': {'$gte': start_date, '$lte': end_date}})
